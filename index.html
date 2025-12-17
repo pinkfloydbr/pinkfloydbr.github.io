@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-XW26RYFXKN"></script>
     <script>
@@ -23,6 +24,38 @@
     <meta charset="UTF-8">
     <title>Pink Floyd - Qual é a música?</title>
     <style>
+        /* Ajustes para Celular (Telas menores que 600px) */
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            
+            .container { margin: 20px auto; }
+
+            .victory { font-size: 1.6rem; letter-spacing: 2px; }
+
+            /* Diminuir fonte das caixas para caber na tela */
+            .box { 
+                font-size: 0.65rem !important; 
+                padding: 8px 2px; 
+                min-height: 45px;
+            }
+
+            /* Ajustar proporção das colunas na tabela */
+            .row { 
+                grid-template-columns: 1.5fr 1.5fr 0.8fr 0.8fr 0.8fr !important; 
+                gap: 4px; 
+            }
+
+            .header-row div { font-size: 0.5rem; }
+
+            /* Ajustar vitrine da Amazon para 2 colunas bem definidas */
+            .amazon-offer { padding: 10px; }
+            
+            .amazon-offer div[style*="grid"] {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 8px !important;
+            }
+        }
+
         /* Espaço para o banner do AdSense no rodapé */
         .ads-container {
             margin-top: 50px;
@@ -226,7 +259,7 @@
     <p style="font-size: 0.8rem; color: #666; margin-top: 15px;">Ofertas exclusivas para fãs na Amazon Brasil</p>
 </div>
 
-    <section style="max-width: 600px; margin: 40px auto; text-align: left; padding: 20px; color: #aaa; line-height: 1.6; font-size: 0.9rem; border-top: 1px solid #222;">
+    <section style="max-width: 600px; margin: 40px auto; text-align: left; padding: 20px; color: #ccc; line-height: 1.6; font-size: 0.9rem; border-top: 1px solid #222;">
         <h2 style="color: #fff; font-size: 1.2rem;">O que é o Pink Floyd - Qual é a música?</h2>
         <p>Este é um jogo de adivinhação diário dedicado à discografia da maior banda de rock progressivo de todos os tempos. O objetivo é descobrir qual a música do dia utilizando dicas baseadas no <strong>álbum</strong>, <strong>ano de lançamento</strong>, <strong>número da faixa</strong> e <strong>tempo de duração</strong>.</p>
         <p>Seja você fã da fase psicodélica de Syd Barrett ou das grandes óperas rock de Roger Waters e David Gilmour, o desafio testa seus conhecimentos sobre álbuns clássicos como <em>The Dark Side of the Moon</em> e <em>The Wall</em>.</p>
