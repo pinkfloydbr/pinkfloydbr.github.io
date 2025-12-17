@@ -33,7 +33,6 @@
             color: white; border-radius: 8px; font-size: 1.1rem; margin-bottom: 20px; outline: none;
         }
 
-        /* Botões */
         .btn {
             background: transparent; border: 1px solid var(--green); color: var(--green);
             padding: 12px 25px; border-radius: 5px; cursor: pointer; margin: 10px; font-weight: bold;
@@ -41,7 +40,6 @@
         }
         .btn:hover { background: var(--green); color: black; }
 
-        /* Tabela de Resultados */
         .row { display: grid; grid-template-columns: 2fr 2fr 1fr 1fr 1fr; gap: 8px; margin-bottom: 8px; }
         .box { background: var(--card); padding: 12px 5px; border-radius: 4px; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; }
         
@@ -242,7 +240,7 @@ const songs = [
     { name: "Louder Than Words", album: "The Endless River", year: 2014, track: 18, duration: 396 }
 ];
 
-    // Lógica para Música do Dia
+
     const today = new Date();
     const dateStr = today.toLocaleDateString('pt-BR');
     document.getElementById('dateDisplay').innerText = "Desafio de " + dateStr;
@@ -258,7 +256,6 @@ const songs = [
     let gameOver = false;
     let attemptsHistory = [];
 
-    // Preencher Autocomplete
     const dl = document.getElementById('songsList');
     songs.forEach(s => {
         let opt = document.createElement('option');
@@ -307,7 +304,8 @@ const songs = [
             <div class="box ${compare('duration')}">${formatTime(guess.duration)}${arrow('duration')}</div>
         `;
 
-        results.insertBefore(row, results.firstChild);
+        // ALTERAÇÃO AQUI: Mudamos de insertBefore para appendChild
+        results.appendChild(row);
 
         if (isCorrect) {
             finalizarJogo();
@@ -327,16 +325,13 @@ const songs = [
 
     function copiarResultado() {
         const grid = attemptsHistory.join("\n");
-        const texto = `Pink Floyd - Qual é a música?\n${window.location.href}\nMúsica do dia ${dateStr}\nTentativas: ${attemptsHistory.length}\n${grid}\nPontuação: ${currentScore}\nConsegue bater meu recorde?`;
+        const texto = `Joguei FLOYDLE (${dateStr})\nTentativas: ${attemptsHistory.length}\n${grid}\nPontuação: ${currentScore}\nConsegue bater meu recorde?\nJogue aqui: ${window.location.href}`;
         
         navigator.clipboard.writeText(texto).then(() => {
             const btn = document.getElementById('shareBtn');
             const originalText = btn.innerText;
             btn.innerText = "Copiado! ✅";
             setTimeout(() => btn.innerText = originalText, 2000);
-        }).catch(err => {
-            console.error('Erro ao copiar: ', err);
-            alert("Não foi possível copiar automaticamente.");
         });
     }
 </script>
