@@ -19,8 +19,30 @@
         }
 
         .rainbow-bar { height: 4px; width: 100%; background: var(--rainbow); position: fixed; top: 0; left: 0; z-index: 1000; }
-        .container { max-width: 800px; margin: 40px auto; }
+        .container { max-width: 800px; margin: 40px auto; position: relative; }
         
+        /* Estilo do Botão de Ajuda */
+        .help-btn {
+            position: absolute; top: -10px; right: 10px;
+            background: none; border: 2px solid #444; color: #444;
+            width: 30px; height: 30px; border-radius: 50%; cursor: pointer;
+            font-weight: bold; font-size: 1.2rem; transition: 0.3s;
+        }
+        .help-btn:hover { border-color: white; color: white; }
+
+        /* Estilo do Modal (Janela de Regras) */
+        .modal {
+            display: none; position: fixed; z-index: 2000; left: 0; top: 0;
+            width: 100%; height: 100%; background-color: rgba(0,0,0,0.9);
+        }
+        .modal-content {
+            background-color: #1a1a1a; margin: 10% auto; padding: 30px;
+            border: 1px solid #333; width: 80%; max-width: 500px;
+            border-radius: 15px; text-align: left; line-height: 1.6;
+        }
+        .close-modal { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close-modal:hover { color: white; }
+
         .panel {
             background: #1a1a1a; padding: 15px; border-radius: 10px;
             display: inline-block; margin-bottom: 20px; border: 1px solid #333;
@@ -55,9 +77,32 @@
 
 <div class="rainbow-bar"></div>
 
+<div id="helpModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="fecharAjuda()">&times;</span>
+        <h2 style="margin-top: 0;">Como Jogar 🎸</h2>
+        <p>Adivinhe a música do Pink Floyd do dia.</p>
+        <p>A cada tentativa, as cores mudam para mostrar o quão perto você está:</p>
+        <ul style="list-style: none; padding: 0;">
+            <li><b style="color: var(--green)">🟩 Verde:</b> Acerto exato naquela coluna.</li>
+            <li><b style="color: var(--red)">🟥 Vermelho:</b> Informação incorreta.</li>
+            <li><b>⬆️ Seta para cima:</b> O valor correto é maior/mais recente.</li>
+            <li><b>⬇️ Seta para baixo:</b> O valor correto é menor/mais antigo.</li>
+        </ul>
+        <p style="font-size: 0.9rem; color: #888; border-top: 1px solid #333; pt-10px; margin-top: 20px;">Uma música nova disponível todos os dias!</p>
+    </div>
+</div>
+
 <div class="container">
-    <h1 id="mainTitle">Uma música por dia</h1>
-    <p id="dateDisplay" style="color: #666; margin-top: -10px; margin-bottom: 20px;"></p>
+    <button class="help-btn" onclick="abrirAjuda()">?</button>
+    <h1 id="mainTitle">Uma música do Pink Floyd por dia</h1>
+    <p id="dateDisplay" style="color: #666; margin-top: -10px;"></p>
+
+    <div style="margin-bottom: 20px; font-size: 0.8rem; color: #aaa; display: flex; justify-content: center; gap: 15px;">
+        <span><b style="color: var(--green)">🟩</b> Acerto</span>
+        <span><b style="color: var(--red)">🟥</b> Erro</span>
+        <span><b>⬆️/⬇️</b> Dica de mais alto ou baixo</span>
+    </div>
     
     <div class="panel">
         PONTOS: <span id="scoreValue">1000</span>
@@ -69,177 +114,190 @@
     </div>
 
     <div id="gameInputArea">
-        <input type="text" id="guessInput" list="songsList" placeholder="Tente a música do dia..." oninput="checkInput()">
+        <input type="text" id="guessInput" list="songsList" placeholder="Digite o nome de uma música do Pink Floyd..." oninput="checkInput()">
         <datalist id="songsList"></datalist>
     </div>
 
     <div class="row header-row">
-        <div>Música</div><div>Álbum</div><div>Ano</div><div>Faixa</div><div>Duração</div>
+        <div>Música</div>
+        <div>Álbum</div>
+        <div>Ano (Dica)</div>
+        <div>Nº Faixa</div>
+        <div>Tempo</div>
     </div>
     <div id="results"></div>
 </div>
 
 <script>
-const songs = [
-    // Sua lista completa de músicas permanece aqui (Piper at the Gates até Endless River)
-    { name: "Astronomy Domine", album: "The Piper at the Gates of Dawn", year: 1967, track: 1, duration: 252 },
-    { name: "Lucifer Sam", album: "The Piper at the Gates of Dawn", year: 1967, track: 2, duration: 177 },
-    { name: "Matilda Mother", album: "The Piper at the Gates of Dawn", year: 1967, track: 3, duration: 226 },
-    { name: "Flaming", album: "The Piper at the Gates of Dawn", year: 1967, track: 4, duration: 193 },
-    { name: "Pow R. Toc H.", album: "The Piper at the Gates of Dawn", year: 1967, track: 5, duration: 134 },
-    { name: "Take Up Thy Stethoscope and Walk", album: "The Piper at the Gates of Dawn", year: 1967, track: 6, duration: 192 },
-    { name: "Interstellar Overdrive", album: "The Piper at the Gates of Dawn", year: 1967, track: 7, duration: 541 },
-    { name: "The Gnome", album: "The Piper at the Gates of Dawn", year: 1967, track: 8, duration: 493 },
-    { name: "Chapter 24", album: "The Piper at the Gates of Dawn", year: 1967, track: 9, duration: 204 },
-    { name: "The Scarecrow", album: "The Piper at the Gates of Dawn", year: 1967, track: 10, duration: 611 },
-    { name: "Bike", album: "The Piper at the Gates of Dawn", year: 1967, track: 11, duration: 201 },
-    { name: "Let There Be More Light", album: "A Saucerful of Secrets", year: 1968, track: 1, duration: 278 },
-    { name: "Remember a Day", album: "A Saucerful of Secrets", year: 1968, track: 2, duration: 200 },
-    { name: "Set the Controls for the Heart of the Sun", album: "A Saucerful of Secrets", year: 1968, track: 3, duration: 312 },
-    { name: "Corporal Clegg", album: "A Saucerful of Secrets", year: 1968, track: 4, duration: 182 },
-    { name: "A Saucerful of Secrets", album: "A Saucerful of Secrets", year: 1968, track: 5, duration: 142 },
-    { name: "See-Saw", album: "A Saucerful of Secrets", year: 1968, track: 6, duration: 207 },
-    { name: "Jugband Blues", album: "A Saucerful of Secrets", year: 1968, track: 7, duration: 247 },
-    { name: "Cirrus Minor", album: "More (1969)", year: 1969, track: 1, duration: 318 },
-    { name: "The Nile Song", album: "More (1969)", year: 1969, track: 2, duration: 206 },
-    { name: "Crying Song", album: "More (1969)", year: 1969, track: 3, duration: 213 },
-    { name: "Up the Khyber", album: "More (1969)", year: 1969, track: 4, duration: 132 },
-    { name: "Green Is the Colour", album: "More (1969)", year: 1969, track: 5, duration: 178 },
-    { name: "Cymbaline", album: "More (1969)", year: 1969, track: 6, duration: 290 },
-    { name: "Party Sequence", album: "More (1969)", year: 1969, track: 7, duration: 67 },
-    { name: "Main Theme", album: "More (1969)", year: 1969, track: 8, duration: 328 },
-    { name: "Ibiza Bar", album: "More (1969)", year: 1969, track: 9, duration: 199 },
-    { name: "More Blues", album: "More (1969)", year: 1969, track: 10, duration: 132 },
-    { name: "Quicksilver", album: "More (1969)", year: 1969, track: 11, duration: 439 },
-    { name: "A Spanish Piece", album: "More (1969)", year: 1969, track: 12, duration: 65 },
-    { name: "Dramatic Theme", album: "More (1969)", year: 1969, track: 13, duration: 135 },
-    { name: "Astronomy Domine", album: "Ummagumma", year: 1969, track: 1, duration: 505 },
-    { name: "Careful with That Axe, Eugene", album: "Ummagumma", year: 1969, track: 2, duration: 527 },
-    { name: "Set the Controls for the Heart of the Sun", album: "Ummagumma", year: 1969, track: 3, duration: 561 },
-    { name: "A Saucerful of Secrets", album: "Ummagumma", year: 1969, track: 4, duration: 771 },
-    { name: "Sysyphus", album: "Ummagumma", year: 1969, track: 5, duration: 812 },
-    { name: "Grantchester Meadows", album: "Ummagumma", year: 1969, track: 6, duration: 443 },
-    { name: "Several Species of Small Furry Animals Gathered Together in a Cave and Grooving with a Pict", album: "Ummagumma", year: 1969, track: 7, duration: 287 },
-    { name: "The Narrow Way", album: "Ummagumma", year: 1969, track: 8, duration: 734 },
-    { name: "The Grand Vizier's Garden Party", album: "Ummagumma", year: 1969, track: 9, duration: 535 },    
-    { name: "Atom Heart Mother", album: "Atom Heart Mother", year: 1970, track: 1, duration: 1074 },
-    { name: "If", album: "Atom Heart Mother", year: 1970, track: 2, duration: 1221 },
-    { name: "Summer '68", album: "Atom Heart Mother", year: 1970, track: 3, duration: 174 },
-    { name: "Fat Old Sun", album: "Atom Heart Mother", year: 1970, track: 4, duration: 134 },
-    { name: "Alan's Psychedelic Breakfast", album: "Atom Heart Mother", year: 1970, track: 5, duration: 1223 },
-    { name: "One of These Days", album: "Meddle", year: 1971, track: 1, duration: 903 },
-    { name: "A Pillow of Winds", album: "Meddle", year: 1971, track: 2, duration: 233 },
-    { name: "Fearless", album: "Meddle", year: 1971, track: 3, duration: 284 },
-    { name: "San Tropez", album: "Meddle", year: 1971, track: 4, duration: 164 },
-    { name: "Seamus", album: "Meddle", year: 1971, track: 5, duration: 294 },
-    { name: "Echoes", album: "Meddle", year: 1971, track: 6, duration: 1423 },
-    { name: "Obscured by Clouds", album: "Obscured by Clouds", year: 1972, track: 1, duration: 255 },
-    { name: "When You're In", album: "Obscured by Clouds", year: 1972, track: 2, duration: 164 },
-    { name: "Burning Bridges", album: "A Momentary Lapse of Reason", year: 1987, track: 7, duration: 294 },
-    { name: "The Gold It's in the...", album: "Obscured by Clouds", year: 1972, track: 4, duration: 232 },
-    { name: "Wots... Uh the Deal", album: "Obscured by Clouds", year: 1972, track: 5, duration: 162 },
-    { name: "Mudmen", album: "Obscured by Clouds", year: 1972, track: 6, duration: 179 },
-    { name: "Childhood's End", album: "Obscured by Clouds", year: 1972, track: 7, duration: 262 },
-    { name: "Free Four", album: "Obscured by Clouds", year: 1972, track: 8, duration: 193 },
-    { name: "Stay", album: "Obscured by Clouds", year: 1972, track: 9, duration: 222 },
-    { name: "Absolutely Curtains", album: "Obscured by Clouds", year: 1972, track: 10, duration: 273 },
-    { name: "Speak to Me", album: "The Dark Side of the Moon", year: 1973, track: 1, duration: 90 },
-    { name: "Breathe (In the Air)", album: "The Dark Side of the Moon", year: 1973, track: 2, duration: 163 },
-    { name: "On the Run", album: "The Dark Side of the Moon", year: 1973, track: 3, duration: 215 },
-    { name: "Time", album: "The Dark Side of the Moon", year: 1973, track: 4, duration: 421 },
-    { name: "The Great Gig in the Sky", album: "The Dark Side of the Moon", year: 1973, track: 5, duration: 276 },
-    { name: "Money", album: "The Dark Side of the Moon", year: 1973, track: 6, duration: 382 },
-    { name: "Us and Them", album: "The Dark Side of the Moon", year: 1973, track: 7, duration: 462 },
-    { name: "Any Colour You Like", album: "The Dark Side of the Moon", year: 1973, track: 8, duration: 205 },
-    { name: "Brain Damage", album: "The Dark Side of the Moon", year: 1973, track: 9, duration: 228 },
-    { name: "Eclipse", album: "The Dark Side of the Moon", year: 1973, track: 10, duration: 123 },
-    { name: "Shine On You Crazy Diamond (Pts 1-5)", album: "Wish You Were Here", year: 1975, track: 1, duration: 811 },
-    { name: "Welcome to the Machine", album: "Wish You Were Here", year: 1975, track: 2, duration: 451 },
-    { name: "Have a Cigar", album: "Wish You Were Here", year: 1975, track: 3, duration: 308 },
-    { name: "Wish You Were Here", album: "Wish You Were Here", year: 1975, track: 4, duration: 334 },
-    { name: "Shine On You Crazy Diamond (Pts 6-9)", album: "Wish You Were Here", year: 1975, track: 5, duration: 751 },
-    { name: "Pigs on the Wing 1", album: "Animals", year: 1977, track: 1, duration: 125 },
-    { name: "Dogs", album: "Animals", year: 1977, track: 2, duration: 1025 },
-    { name: "Pigs (Three Different Ones)", album: "Animals", year: 1977, track: 3, duration: 686 },
-    { name: "Sheep", album: "Animals", year: 1977, track: 4, duration: 620 },
-    { name: "Pigs on the Wing 2", album: "Animals", year: 1977, track: 5, duration: 125 },
-    { name: "In the Flesh?", album: "The Wall", year: 1979, track: 1, duration: 203 },
-    { name: "The Thin Ice", album: "The Wall", year: 1979, track: 2, duration: 193 },
-    { name: "Another Brick in the Wall, Part 1", album: "The Wall", year: 1979, track: 3, duration: 251 },
-    { name: "The Happiest Days of Our Lives", album: "The Wall", year: 1979, track: 4, duration: 192 },
-    { name: "Another Brick in the Wall, Part 2", album: "The Wall", year: 1979, track: 5, duration: 213 },
-    { name: "Mother", album: "The Wall", year: 1979, track: 6, duration: 344 },
-    { name: "Goodbye Blue Sky", album: "The Wall", year: 1979, track: 7, duration: 211 },
-    { name: "Empty Spaces", album: "The Wall", year: 1979, track: 8, duration: 183 },
-    { name: "Young Lust", album: "The Wall", year: 1979, track: 9, duration: 212 },
-    { name: "One of My Turns", album: "The Wall", year: 1979, track: 10, duration: 295 },
-    { name: "Don't Leave Me Now", album: "The Wall", year: 1979, track: 11, duration: 216 },
-    { name: "Another Brick in the Wall, Part 3", album: "The Wall", year: 1979, track: 12, duration: 298 },
-    { name: "Goodbye Cruel World", album: "The Wall", year: 1979, track: 13, duration: 135 },
-    { name: "Hey You", album: "The Wall", year: 1979, track: 14, duration: 278 },
-    { name: "Is There Anybody Out There?", album: "The Wall", year: 1979, track: 15, duration: 135 },
-    { name: "Nobody Home", album: "The Wall", year: 1979, track: 16, duration: 217 },
-    { name: "Vera", album: "The Wall", year: 1979, track: 17, duration: 134 },
-    { name: "Comfortably Numb", album: "The Wall", year: 1979, track: 18, duration: 384 },
-    { name: "The Show Must Go On", album: "The Wall", year: 1979, track: 19, duration: 120 },
-    { name: "In the Flesh", album: "The Wall", year: 1979, track: 20, duration: 210 },
-    { name: "Run Like Hell", album: "The Wall", year: 1979, track: 21, duration: 223 },
-    { name: "Waiting for the Worms", album: "The Wall", year: 1979, track: 22, duration: 245 },
-    { name: "Stop", album: "The Wall", year: 1979, track: 23, duration: 84 },
-    { name: "The Trial", album: "The Wall", year: 1979, track: 24, duration: 363 },
-    { name: "Outside the Wall", album: "The Wall", year: 1979, track: 25, duration: 215 },
-    { name: "The Post War Dream", album: "The Final Cut", year: 1983, track: 1, duration: 261 },
-    { name: "Your Possible Pasts", album: "The Final Cut", year: 1983, track: 2, duration: 255 },
-    { name: "One of the Few", album: "The Final Cut", year: 1983, track: 3, duration: 263 },
-    { name: "The Hero's Return", album: "The Final Cut", year: 1983, track: 4, duration: 344 },
-    { name: "The Gunner's Dream", album: "The Final Cut", year: 1983, track: 5, duration: 367 },
-    { name: "Paranoid Eyes", album: "The Final Cut", year: 1983, track: 6, duration: 271 },
-    { name: "Get Your Filthy Hands Off My Desert", album: "The Final Cut", year: 1983, track: 7, duration: 258 },
-    { name: "The Fletcher Memorial Home", album: "The Final Cut", year: 1983, track: 8, duration: 389 },
-    { name: "Southampton Dock", album: "The Final Cut", year: 1983, track: 9, duration: 204 },
-    { name: "The Final Cut", album: "The Final Cut", year: 1983, track: 10, duration: 377 },
-    { name: "Not Now John", album: "The Final Cut", year: 1983, track: 11, duration: 246 },
-    { name: "Two Suns in the Sunset", album: "The Final Cut", year: 1983, track: 12, duration: 312 },
-    { name: "Signs of Life", album: "A Momentary Lapse of Reason", year: 1987, track: 1, duration: 278 },
-    { name: "Learning to Fly", album: "A Momentary Lapse of Reason", year: 1987, track: 2, duration: 261 },
-    { name: "The Dogs of War", album: "A Momentary Lapse of Reason", year: 1987, track: 4, duration: 258 },
-    { name: "One Slip", album: "A Momentary Lapse of Reason", year: 1987, track: 5, duration: 278 },
-    { name: "On the Turning Away", album: "A Momentary Lapse of Reason", year: 1987, track: 6, duration: 287 },
-    { name: "Yet Another Movie", album: "A Momentary Lapse of Reason", year: 1987, track: 7, duration: 741 },
-    { name: "Round and Around", album: "A Momentary Lapse of Reason", year: 1987, track: 8, duration: 339 },
-    { name: "A New Machine (Part 1)", album: "A Momentary Lapse of Reason", year: 1987, track: 9, duration: 250 },
-    { name: "A New Machine (Part 2)", album: "A Momentary Lapse of Reason", year: 1987, track: 10, duration: 229 },
-    { name: "Sorrow", album: "A Momentary Lapse of Reason", year: 1987, track: 3, duration: 285 },
-    { name: "Cluster One", album: "The Division Bell", year: 1994, track: 1, duration: 300 },
-    { name: "What Do You Want from Me", album: "The Division Bell", year: 1994, track: 2, duration: 249 },
-    { name: "Poles Apart", album: "The Division Bell", year: 1994, track: 4, duration: 340 },
-    { name: "Marooned", album: "The Division Bell", year: 1994, track: 3, duration: 516 },
-    { name: "A Great Day for Freedom", album: "The Division Bell", year: 1994, track: 5, duration: 319 },
-    { name: "Night Light", album: "The Division Bell", year: 1994, track: 6, duration: 258 },
-    { name: "Wearing the Inside Out", album: "The Division Bell", year: 1994, track: 7, duration: 435 },
-    { name: "Take It Back", album: "The Division Bell", year: 1994, track: 8, duration: 434 },
-    { name: "Coming Back to Life", album: "The Division Bell", year: 1994, track: 9, duration: 278 },
-    { name: "High Hopes", album: "The Division Bell", year: 1994, track: 10, duration: 744 },
-    { name: "Things Left Unsaid", album: "The Endless River", year: 2014, track: 1, duration: 266 },
-    { name: "It's What We Do", album: "The Endless River", year: 2014, track: 2, duration: 377 },
-    { name: "Ebb and Flow", album: "The Endless River", year: 2014, track: 3, duration: 115 },
-    { name: "Sum", album: "The Endless River", year: 2014, track: 4, duration: 288 },
-    { name: "Skins", album: "The Endless River", year: 2014, track: 5, duration: 157 },
-    { name: "Unsung", album: "The Endless River", year: 2014, track: 6, duration: 67 },
-    { name: "Anisina", album: "The Endless River", year: 2014, track: 7, duration: 196 },
-    { name: "The Lost Art of Conversation", album: "The Endless River", year: 2014, track: 8, duration: 102 },
-    { name: "On Noodle Street", album: "The Endless River", year: 2014, track: 9, duration: 102 },
-    { name: "Night Light", album: "The Endless River", year: 2014, track: 10, duration: 102 },
-    { name: "Allons-y (1)", album: "The Endless River", year: 2014, track: 11, duration: 117 },
-    { name: "Autumn '68", album: "The Endless River", year: 2014, track: 12, duration: 95 },
-    { name: "Allons-y (2)", album: "The Endless River", year: 2014, track: 13, duration: 92 },
-    { name: "Talkin' Hawkin'", album: "The Endless River", year: 2014, track: 14, duration: 209 },
-    { name: "Calling", album: "The Endless River", year: 2014, track: 15, duration: 217 },
-    { name: "Eyes to Pearls", album: "The Endless River", year: 2014, track: 16, duration: 111 },
-    { name: "Surfacing", album: "The Endless River", year: 2014, track: 17, duration: 166 },
-    { name: "Louder Than Words", album: "The Endless River", year: 2014, track: 18, duration: 396 }
-];
+    // Controle do Modal
+    window.onload = function() {
+        if (!localStorage.getItem('visitouAntes')) {
+            abrirAjuda();
+            localStorage.setItem('visitouAntes', 'true');
+        }
+    }
+    function abrirAjuda() { document.getElementById('helpModal').style.display = "block"; }
+    function fecharAjuda() { document.getElementById('helpModal').style.display = "none"; }
 
+    const songs = [
+        // ... (Mantive sua lista de músicas idêntica ao arquivo original)
+        { name: "Astronomy Domine", album: "The Piper at the Gates of Dawn", year: 1967, track: 1, duration: 252 },
+        { name: "Lucifer Sam", album: "The Piper at the Gates of Dawn", year: 1967, track: 2, duration: 177 },
+        { name: "Matilda Mother", album: "The Piper at the Gates of Dawn", year: 1967, track: 3, duration: 226 },
+        { name: "Flaming", album: "The Piper at the Gates of Dawn", year: 1967, track: 4, duration: 193 },
+        { name: "Pow R. Toc H.", album: "The Piper at the Gates of Dawn", year: 1967, track: 5, duration: 134 },
+        { name: "Take Up Thy Stethoscope and Walk", album: "The Piper at the Gates of Dawn", year: 1967, track: 6, duration: 192 },
+        { name: "Interstellar Overdrive", album: "The Piper at the Gates of Dawn", year: 1967, track: 7, duration: 541 },
+        { name: "The Gnome", album: "The Piper at the Gates of Dawn", year: 1967, track: 8, duration: 493 },
+        { name: "Chapter 24", album: "The Piper at the Gates of Dawn", year: 1967, track: 9, duration: 204 },
+        { name: "The Scarecrow", album: "The Piper at the Gates of Dawn", year: 1967, track: 10, duration: 611 },
+        { name: "Bike", album: "The Piper at the Gates of Dawn", year: 1967, track: 11, duration: 201 },
+        { name: "Let There Be More Light", album: "A Saucerful of Secrets", year: 1968, track: 1, duration: 278 },
+        { name: "Remember a Day", album: "A Saucerful of Secrets", year: 1968, track: 2, duration: 200 },
+        { name: "Set the Controls for the Heart of the Sun", album: "A Saucerful of Secrets", year: 1968, track: 3, duration: 312 },
+        { name: "Corporal Clegg", album: "A Saucerful of Secrets", year: 1968, track: 4, duration: 182 },
+        { name: "A Saucerful of Secrets", album: "A Saucerful of Secrets", year: 1968, track: 5, duration: 142 },
+        { name: "See-Saw", album: "A Saucerful of Secrets", year: 1968, track: 6, duration: 207 },
+        { name: "Jugband Blues", album: "A Saucerful of Secrets", year: 1968, track: 7, duration: 247 },
+        { name: "Cirrus Minor", album: "More (1969)", year: 1969, track: 1, duration: 318 },
+        { name: "The Nile Song", album: "More (1969)", year: 1969, track: 2, duration: 206 },
+        { name: "Crying Song", album: "More (1969)", year: 1969, track: 3, duration: 213 },
+        { name: "Up the Khyber", album: "More (1969)", year: 1969, track: 4, duration: 132 },
+        { name: "Green Is the Colour", album: "More (1969)", year: 1969, track: 5, duration: 178 },
+        { name: "Cymbaline", album: "More (1969)", year: 1969, track: 6, duration: 290 },
+        { name: "Party Sequence", album: "More (1969)", year: 1969, track: 7, duration: 67 },
+        { name: "Main Theme", album: "More (1969)", year: 1969, track: 8, duration: 328 },
+        { name: "Ibiza Bar", album: "More (1969)", year: 1969, track: 9, duration: 199 },
+        { name: "More Blues", album: "More (1969)", year: 1969, track: 10, duration: 132 },
+        { name: "Quicksilver", album: "More (1969)", year: 1969, track: 11, duration: 439 },
+        { name: "A Spanish Piece", album: "More (1969)", year: 1969, track: 12, duration: 65 },
+        { name: "Dramatic Theme", album: "More (1969)", year: 1969, track: 13, duration: 135 },
+        { name: "Astronomy Domine", album: "Ummagumma", year: 1969, track: 1, duration: 505 },
+        { name: "Careful with That Axe, Eugene", album: "Ummagumma", year: 1969, track: 2, duration: 527 },
+        { name: "Set the Controls for the Heart of the Sun", album: "Ummagumma", year: 1969, track: 3, duration: 561 },
+        { name: "A Saucerful of Secrets", album: "Ummagumma", year: 1969, track: 4, duration: 771 },
+        { name: "Sysyphus", album: "Ummagumma", year: 1969, track: 5, duration: 812 },
+        { name: "Grantchester Meadows", album: "Ummagumma", year: 1969, track: 6, duration: 443 },
+        { name: "Several Species of Small Furry Animals Gathered Together in a Cave and Grooving with a Pict", album: "Ummagumma", year: 1969, track: 7, duration: 287 },
+        { name: "The Narrow Way", album: "Ummagumma", year: 1969, track: 8, duration: 734 },
+        { name: "The Grand Vizier's Garden Party", album: "Ummagumma", year: 1969, track: 9, duration: 535 },    
+        { name: "Atom Heart Mother", album: "Atom Heart Mother", year: 1970, track: 1, duration: 1074 },
+        { name: "If", album: "Atom Heart Mother", year: 1970, track: 2, duration: 1221 },
+        { name: "Summer '68", album: "Atom Heart Mother", year: 1970, track: 3, duration: 174 },
+        { name: "Fat Old Sun", album: "Atom Heart Mother", year: 1970, track: 4, duration: 134 },
+        { name: "Alan's Psychedelic Breakfast", album: "Atom Heart Mother", year: 1970, track: 5, duration: 1223 },
+        { name: "One of These Days", album: "Meddle", year: 1971, track: 1, duration: 903 },
+        { name: "A Pillow of Winds", album: "Meddle", year: 1971, track: 2, duration: 233 },
+        { name: "Fearless", album: "Meddle", year: 1971, track: 3, duration: 284 },
+        { name: "San Tropez", album: "Meddle", year: 1971, track: 4, duration: 164 },
+        { name: "Seamus", album: "Meddle", year: 1971, track: 5, duration: 294 },
+        { name: "Echoes", album: "Meddle", year: 1971, track: 6, duration: 1423 },
+        { name: "Obscured by Clouds", album: "Obscured by Clouds", year: 1972, track: 1, duration: 255 },
+        { name: "When You're In", album: "Obscured by Clouds", year: 1972, track: 2, duration: 164 },
+        { name: "Burning Bridges", album: "A Momentary Lapse of Reason", year: 1987, track: 7, duration: 294 },
+        { name: "The Gold It's in the...", album: "Obscured by Clouds", year: 1972, track: 4, duration: 232 },
+        { name: "Wots... Uh the Deal", album: "Obscured by Clouds", year: 1972, track: 5, duration: 162 },
+        { name: "Mudmen", album: "Obscured by Clouds", year: 1972, track: 6, duration: 179 },
+        { name: "Childhood's End", album: "Obscured by Clouds", year: 1972, track: 7, duration: 262 },
+        { name: "Free Four", album: "Obscured by Clouds", year: 1972, track: 8, duration: 193 },
+        { name: "Stay", album: "Obscured by Clouds", year: 1972, track: 9, duration: 222 },
+        { name: "Absolutely Curtains", album: "Obscured by Clouds", year: 1972, track: 10, duration: 273 },
+        { name: "Speak to Me", album: "The Dark Side of the Moon", year: 1973, track: 1, duration: 90 },
+        { name: "Breathe (In the Air)", album: "The Dark Side of the Moon", year: 1973, track: 2, duration: 163 },
+        { name: "On the Run", album: "The Dark Side of the Moon", year: 1973, track: 3, duration: 215 },
+        { name: "Time", album: "The Dark Side of the Moon", year: 1973, track: 4, duration: 421 },
+        { name: "The Great Gig in the Sky", album: "The Dark Side of the Moon", year: 1973, track: 5, duration: 276 },
+        { name: "Money", album: "The Dark Side of the Moon", year: 1973, track: 6, duration: 382 },
+        { name: "Us and Them", album: "The Dark Side of the Moon", year: 1973, track: 7, duration: 462 },
+        { name: "Any Colour You Like", album: "The Dark Side of the Moon", year: 1973, track: 8, duration: 205 },
+        { name: "Brain Damage", album: "The Dark Side of the Moon", year: 1973, track: 9, duration: 228 },
+        { name: "Eclipse", album: "The Dark Side of the Moon", year: 1973, track: 10, duration: 123 },
+        { name: "Shine On You Crazy Diamond (Pts 1-5)", album: "Wish You Were Here", year: 1975, track: 1, duration: 811 },
+        { name: "Welcome to the Machine", album: "Wish You Were Here", year: 1975, track: 2, duration: 451 },
+        { name: "Have a Cigar", album: "Wish You Were Here", year: 1975, track: 3, duration: 308 },
+        { name: "Wish You Were Here", album: "Wish You Were Here", year: 1975, track: 4, duration: 334 },
+        { name: "Shine On You Crazy Diamond (Pts 6-9)", album: "Wish You Were Here", year: 1975, track: 5, duration: 751 },
+        { name: "Pigs on the Wing 1", album: "Animals", year: 1977, track: 1, duration: 125 },
+        { name: "Dogs", album: "Animals", year: 1977, track: 2, duration: 1025 },
+        { name: "Pigs (Three Different Ones)", album: "Animals", year: 1977, track: 3, duration: 686 },
+        { name: "Sheep", album: "Animals", year: 1977, track: 4, duration: 620 },
+        { name: "Pigs on the Wing 2", album: "Animals", year: 1977, track: 5, duration: 125 },
+        { name: "In the Flesh?", album: "The Wall", year: 1979, track: 1, duration: 203 },
+        { name: "The Thin Ice", album: "The Wall", year: 1979, track: 2, duration: 193 },
+        { name: "Another Brick in the Wall, Part 1", album: "The Wall", year: 1979, track: 3, duration: 251 },
+        { name: "The Happiest Days of Our Lives", album: "The Wall", year: 1979, track: 4, duration: 192 },
+        { name: "Another Brick in the Wall, Part 2", album: "The Wall", year: 1979, track: 5, duration: 213 },
+        { name: "Mother", album: "The Wall", year: 1979, track: 6, duration: 344 },
+        { name: "Goodbye Blue Sky", album: "The Wall", year: 1979, track: 7, duration: 211 },
+        { name: "Empty Spaces", album: "The Wall", year: 1979, track: 8, duration: 183 },
+        { name: "Young Lust", album: "The Wall", year: 1979, track: 9, duration: 212 },
+        { name: "One of My Turns", album: "The Wall", year: 1979, track: 10, duration: 295 },
+        { name: "Don't Leave Me Now", album: "The Wall", year: 1979, track: 11, duration: 216 },
+        { name: "Another Brick in the Wall, Part 3", album: "The Wall", year: 1979, track: 12, duration: 298 },
+        { name: "Goodbye Cruel World", album: "The Wall", year: 1979, track: 13, duration: 135 },
+        { name: "Hey You", album: "The Wall", year: 1979, track: 14, duration: 278 },
+        { name: "Is There Anybody Out There?", album: "The Wall", year: 1979, track: 15, duration: 135 },
+        { name: "Nobody Home", album: "The Wall", year: 1979, track: 16, duration: 217 },
+        { name: "Vera", album: "The Wall", year: 1979, track: 17, duration: 134 },
+        { name: "Comfortably Numb", album: "The Wall", year: 1979, track: 18, duration: 384 },
+        { name: "The Show Must Go On", album: "The Wall", year: 1979, track: 19, duration: 120 },
+        { name: "In the Flesh", album: "The Wall", year: 1979, track: 20, duration: 210 },
+        { name: "Run Like Hell", album: "The Wall", year: 1979, track: 21, duration: 223 },
+        { name: "Waiting for the Worms", album: "The Wall", year: 1979, track: 22, duration: 245 },
+        { name: "Stop", album: "The Wall", year: 1979, track: 23, duration: 84 },
+        { name: "The Trial", album: "The Wall", year: 1979, track: 24, duration: 363 },
+        { name: "Outside the Wall", album: "The Wall", year: 1979, track: 25, duration: 215 },
+        { name: "The Post War Dream", album: "The Final Cut", year: 1983, track: 1, duration: 261 },
+        { name: "Your Possible Pasts", album: "The Final Cut", year: 1983, track: 2, duration: 255 },
+        { name: "One of the Few", album: "The Final Cut", year: 1983, track: 3, duration: 263 },
+        { name: "The Hero's Return", album: "The Final Cut", year: 1983, track: 4, duration: 344 },
+        { name: "The Gunner's Dream", album: "The Final Cut", year: 1983, track: 5, duration: 367 },
+        { name: "Paranoid Eyes", album: "The Final Cut", year: 1983, track: 6, duration: 271 },
+        { name: "Get Your Filthy Hands Off My Desert", album: "The Final Cut", year: 1983, track: 7, duration: 258 },
+        { name: "The Fletcher Memorial Home", album: "The Final Cut", year: 1983, track: 8, duration: 389 },
+        { name: "Southampton Dock", album: "The Final Cut", year: 1983, track: 9, duration: 204 },
+        { name: "The Final Cut", album: "The Final Cut", year: 1983, track: 10, duration: 377 },
+        { name: "Not Now John", album: "The Final Cut", year: 1983, track: 11, duration: 246 },
+        { name: "Two Suns in the Sunset", album: "The Final Cut", year: 1983, track: 12, duration: 312 },
+        { name: "Signs of Life", album: "A Momentary Lapse of Reason", year: 1987, track: 1, duration: 278 },
+        { name: "Learning to Fly", album: "A Momentary Lapse of Reason", year: 1987, track: 2, duration: 261 },
+        { name: "The Dogs of War", album: "A Momentary Lapse of Reason", year: 1987, track: 4, duration: 258 },
+        { name: "One Slip", album: "A Momentary Lapse of Reason", year: 1987, track: 5, duration: 278 },
+        { name: "On the Turning Away", album: "A Momentary Lapse of Reason", year: 1987, track: 6, duration: 287 },
+        { name: "Yet Another Movie", album: "A Momentary Lapse of Reason", year: 1987, track: 7, duration: 741 },
+        { name: "Round and Around", album: "A Momentary Lapse of Reason", year: 1987, track: 8, duration: 339 },
+        { name: "A New Machine (Part 1)", album: "A Momentary Lapse of Reason", year: 1987, track: 9, duration: 250 },
+        { name: "A New Machine (Part 2)", album: "A Momentary Lapse of Reason", year: 1987, track: 10, duration: 229 },
+        { name: "Sorrow", album: "A Momentary Lapse of Reason", year: 1987, track: 3, duration: 285 },
+        { name: "Cluster One", album: "The Division Bell", year: 1994, track: 1, duration: 300 },
+        { name: "What Do You Want from Me", album: "The Division Bell", year: 1994, track: 2, duration: 249 },
+        { name: "Poles Apart", album: "The Division Bell", year: 1994, track: 4, duration: 340 },
+        { name: "Marooned", album: "The Division Bell", year: 1994, track: 3, duration: 516 },
+        { name: "A Great Day for Freedom", album: "The Division Bell", year: 1994, track: 5, duration: 319 },
+        { name: "Night Light", album: "The Division Bell", year: 1994, track: 6, duration: 258 },
+        { name: "Wearing the Inside Out", album: "The Division Bell", year: 1994, track: 7, duration: 435 },
+        { name: "Take It Back", album: "The Division Bell", year: 1994, track: 8, duration: 434 },
+        { name: "Coming Back to Life", album: "The Division Bell", year: 1994, track: 9, duration: 278 },
+        { name: "High Hopes", album: "The Division Bell", year: 1994, track: 10, duration: 744 },
+        { name: "Things Left Unsaid", album: "The Endless River", year: 2014, track: 1, duration: 266 },
+        { name: "It's What We Do", album: "The Endless River", year: 2014, track: 2, duration: 377 },
+        { name: "Ebb and Flow", album: "The Endless River", year: 2014, track: 3, duration: 115 },
+        { name: "Sum", album: "The Endless River", year: 2014, track: 4, duration: 288 },
+        { name: "Skins", album: "The Endless River", year: 2014, track: 5, duration: 157 },
+        { name: "Unsung", album: "The Endless River", year: 2014, track: 6, duration: 67 },
+        { name: "Anisina", album: "The Endless River", year: 2014, track: 7, duration: 196 },
+        { name: "The Lost Art of Conversation", album: "The Endless River", year: 2014, track: 8, duration: 102 },
+        { name: "On Noodle Street", album: "The Endless River", year: 2014, track: 9, duration: 102 },
+        { name: "Night Light", album: "The Endless River", year: 2014, track: 10, duration: 102 },
+        { name: "Allons-y (1)", album: "The Endless River", year: 2014, track: 11, duration: 117 },
+        { name: "Autumn '68", album: "The Endless River", year: 2014, track: 12, duration: 95 },
+        { name: "Allons-y (2)", album: "The Endless River", year: 2014, track: 13, duration: 92 },
+        { name: "Talkin' Hawkin'", album: "The Endless River", year: 2014, track: 14, duration: 209 },
+        { name: "Calling", album: "The Endless River", year: 2014, track: 15, duration: 217 },
+        { name: "Eyes to Pearls", album: "The Endless River", year: 2014, track: 16, duration: 111 },
+        { name: "Surfacing", album: "The Endless River", year: 2014, track: 17, duration: 166 },
+        { name: "Louder Than Words", album: "The Endless River", year: 2014, track: 18, duration: 396 }
+    ];
 
     const today = new Date();
     const dateStr = today.toLocaleDateString('pt-BR');
@@ -304,7 +362,6 @@ const songs = [
             <div class="box ${compare('duration')}">${formatTime(guess.duration)}${arrow('duration')}</div>
         `;
 
-        // ALTERAÇÃO AQUI: Mudamos de insertBefore para appendChild
         results.appendChild(row);
 
         if (isCorrect) {
