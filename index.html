@@ -539,14 +539,50 @@
         }
     }
 
+    // 1. Modifique a função de Salvar para incluir a data de hoje
     function saveGameState() {
         const state = {
-            date: dateStr,
+            dataDoJogo: dateStr, // Salva a data (ex: "18/12/2025")
+            guesses: guessedSongsNames,
+            history: attemptsHistory,
             score: currentScore,
-            guesses: guessedSongsNames
+            gameOver: gameOver
         };
-        localStorage.setItem('floydle_save', JSON.stringify(state));
+        localStorage.setItem('floydle_gameState', JSON.stringify(state));
     }
+
+    // 2. Modifique a função de Carregar para verificar se a data mudou
+    function loadGameState() {
+        const saved = localStorage.getItem('floydle_gameState');
+        if (saved) {
+            const state = JSON.parse(saved);
+            
+            // O PULO DO GATO: Se a data salva for diferente da data de hoje, limpa tudo!
+            if (state.dataDoJogo !== dateStr) {
+                localStorage.removeItem('floydle_gameState');
+                return; // Sai da função e o jogo começa limpo
+            }
+
+            // Se a data for a mesma, ele restaura o progresso normalmente
+            guessedSongsNames = state.guesses;
+            attemptsHistory = state.history;
+            currentScore = state.score;
+            gameOver = state.gameOver;
+
+            // Atualiza a interface com as tentativas que já foram feitas
+            guessedSongsNames.forEach((name, index) => {
+                const song = songs.find(s => s.name === name);
+                if (song) {
+                    const rowEmojis = attemptsHistory[index];
+                    renderGuessRow(song, rowEmojis);
+                }
+            });
+
+            if (gameOver) {
+                finalizarJogo(false);
+            }
+        }
+    }    
 
     function formatTime(sec) {
         const m = Math.floor(sec/60);
