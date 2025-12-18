@@ -24,6 +24,36 @@
     <meta charset="UTF-8">
     <title>Pink Floyd - Qual é a música?</title>
     <style>
+        /* NOVO ESTILO PARA O BOTÃO DE COMPARTILHAR */
+        .share-button {
+            background: linear-gradient(135deg, #f1c40f 0%, #d4ac0d 100%); /* Dourado degradê */
+            color: #000 !important;
+            border: none;
+            padding: 18px 25px;
+            font-size: 1.2rem;
+            font-weight: 900;
+            border-radius: 50px;
+            cursor: pointer;
+            width: 100%;
+            max-width: 320px;
+            margin: 20px auto;
+            display: block;
+            box-shadow: 0 4px 15px rgba(241, 196, 15, 0.3);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .share-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(241, 196, 15, 0.5);
+            filter: brightness(1.1);
+        }
+
+        .share-button:active {
+            transform: translateY(1px);
+        }
+
         /* Ajustes para Celular (Telas menores que 600px) */
         @media (max-width: 600px) {
             body { padding: 10px; }
@@ -198,7 +228,7 @@
     <br>
 
     <div id="controls">
-        <button class="btn" id="shareBtn" onclick="copiarResultado()">📋 Copiar Resultado</button>
+        <button class="share-button" id="shareBtn" onclick="copiarResultado()" style="display:none;">🚀 COMPARTILHAR RESULTADO</button>
     </div>
 
     <div id="gameInputArea">
@@ -587,14 +617,31 @@
     }
 
     function copiarResultado() {
-        const grid = attemptsHistory.join("\n");
-        const texto = `Pink Floyd - Qual é a música?\n${window.location.href}\nMúsica do dia ${dateStr}\nTentativas: ${attemptsHistory.length}\n${grid}\nPontuação: ${currentScore}\nConsegue bater meu recorde?`;
+        // 1. Pega a data atual formatada
+        const dataPost = document.getElementById('dateDisplay').innerText.replace("Desafio de ", "");
 
+        // 2. Gera a sequência de quadradinhos coloridos de cada tentativa
+        // O seu código já salva isso no array attemptsHistory durante o jogo
+        const blocosRelatorio = attemptsHistory.join("\n");
+
+        // 3. Monta o texto no estilo que você preferia
+        const texto = `Pink Floyd - Qual é a música?\n` +
+                      `https://pinkfloydbr.github.io/\n` +
+                      `Música do dia ${dataPost}\n` +
+                      `Tentativas: ${attemptsHistory.length}\n` +
+                      `${blocosRelatorio}\n` +
+                      `Pontuação: ${currentScore}\n` +
+                      `Consegue bater meu recorde?`;
+
+        // 4. Copia para a área de transferência
         navigator.clipboard.writeText(texto).then(() => {
             const btn = document.getElementById('shareBtn');
-            const originalText = btn.innerText;
-            btn.innerText = "Copiado! ✅";
-            setTimeout(() => btn.innerText = originalText, 2000);
+            const originalText = btn.innerHTML;
+            btn.innerHTML = "COPIADO! ✅";
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+            }, 2000);
         });
     }
 </script>
