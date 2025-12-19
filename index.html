@@ -620,6 +620,10 @@
             <div class="box ${compare('duration')}">${formatTime(guess.duration)}${arrow('duration')}</div>
         `;
 
+        gtag('event', 'tentativa_musica', {
+            'musica_tentada': guess.name
+        });
+
         results.appendChild(row);
 
         if (isCorrect) {
